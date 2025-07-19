@@ -24,3 +24,6 @@ Run :  `ls -l`
 
 ![mkdir app1](./Images/mkdir%20app1.PNG)
 
+- Create a simple python script which prints the time and hostname every 5 seconds. There are six commented parts tothis script, which should explain what each part is meant to do.  The script is included with others in the course tar file,you may consider using thefindcommand used before to find and copy over the file.While the command showsvimas an example other text editors such asnanowork just as well.
+
+Run : `vim simple.py`
