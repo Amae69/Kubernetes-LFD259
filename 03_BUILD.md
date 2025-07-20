@@ -166,3 +166,108 @@ Run : `. $HOME/local-repo-setup.sh`
 
 ![config repo](./Images/config%20repo.PNG)
 
+- Download and tag a typical image from https://hub.docker.com/  Tag the image using the IP and port of the registry, via the **$repo variable**.
+
+Run : `sudo podman pull docker.io/library/alpine`
+
+![podman pull docker](./Images/podman%20pull%20docker.PNG)
+
+Run : `sudo podman tag alpine $repo/tagtest`
+
+- Push the newly tagged image to my **local registry**.  If you receive an error about an HTTP request to an HTTPS client check that you edited the **/etc/containers/registry.conf** file correctly and restarted the service
+
+Run : `sudo podman push $repo/tagtest`
+
+![push tag image to my local repo](./Images/push%20tag%20image%20to%20my%20local%20repo.PNG)
+
+- We will test to make sure we can also **pull images** from our **local repository**. Begin by removing the local cached images
+
+Run : `sudo podman image rm alpine`
+
+Run : `sudo podman image rm $repo/tagtest`
+
+- Pull the image from the **local registry**. It should report the download of a newer image
+
+Run : `sudo podman pull $repo/tagtest`
+
+![pull image from our local repo](./Images/pull%20image%20from%20our%20local%20repo.PNG)
+
+- Configure the worker (second) node to use the registry running on the **cp server**.  Connect to the **worker node**.  Follow the steps mentioned earlier to **install podman** on the worker node.
+
+![install podman in worker](./Images/install%20podman%20in%20worker.PNG)
+
+Run : `find $HOME -name local-repo-setup.sh`
+
+Run : `cp /home/kris/LFD259/SOLUTIONS/s_03/local-repo-setup.sh $HOME`
+
+Run : `chmod +x $HOME/local-repo-setup.sh`
+
+Run : `. $HOME/local-repo-setup.sh`       #dot **with space** script name to set correct variables
+
+![config repo in worker](./Images/config%20repo%20in%20worker.PNG)
+
+Run : `sudo podman pull $repo/tagtest` #if needed export repo=10.97.40.62:5000
+
+![pull image from our local repo in worker node](./Images/pull%20image%20from%20our%20local%20repo%20in%20worker%20node.PNG)
+
+- Now that we know **podman** on all **nodes** can use the **repository** we need to make sure **Kubernetes** knows about the new **repository** and settings as well. The simplest way is to **reboot** every **node**. then Log back in after the connection closes.
+
+On all Nodes Run : `sudo reboot`
+
+- Now test that the **repo** works after the reboot, as good admins we want to know our configuration is persistent.  Be aware it can take a minute or two after reboot for the **kube-apiserver** to fully start. If the **$repo variable** isn’t set check the source statement in **.bashrc.**
+
+Run : `curl $repo/v2/_catalog`
+
+![test repo on both nodes](./Images/test%20repo%20on%20both%20nodes.PNG)
+
+- On CP Node, use **podman** tag to assign the **simpleapp** image and then push it to the **local registry**.  The image and dependent images should be pushed to the local repository
+
+Run : `sudo podman tag simpleapp $repo/simpleapp`
+
+Run : `sudo podman push $repo/simpleapp`
+
+![push simpleapp image to our repo](./Images/push%20simpleapp%20imageto%20our%20repo.PNG)
+
+- Test that the image can be found in the repository, from both the cp and the worker node
+
+Run : `curl $repo/v2/_catalog`
+
+![image found in our repo](./Images/image%20found%20in%20our%20repo.PNG)
+
+- On the cp node we'll deploy the **simpleapp** in **Kubernetes** with several **replicas**.  We will name the **deployment** **try1**. Scale to have **six** replicas. Increase the replica count until pods are deployed on both **cp** and **worker** Node.
+
+Run : `kubectl create deployment try1 --image=$repo/simpleapp`
+
+Run : `kubectl scale deployment try1 --replicas=6`
+
+Run : `kubectl get pod -o wide`
+
+![deploy the simpleapp on k8s](./Images/deploy%20the%20simpleapp%20on%20k8s.PNG)
+
+- On the second node (Worker) use **sudo crictl ps** to verify containers of **simpleapp** are running. Even though **podman** has the options, **cri-o** is running the **containers** on our behalf.  The **scheduler** will usually balance **pod** count across **nodes**.  As the **cp** already has several pods running the **new pods** may be on the **worker**, so the number of **pods** returned will vary. **Note:** if you encounter **crictl** error messages, you set the **config** using below command.  
+
+On Worker: `sudo crictl config --set runtime-endpoint=unix:///run/containerd/containerd.sock --set image-endpoint=unix:///run/containerd/containerd.sock`
+
+. If no issue, then the **crictl config** command above can be ignored.
+
+Verify container on Worker node Run: `sudo crictl ps | grep simple`
+
+![verify container on worker](./Images/verify%20container%20on%20worker.PNG)
+
+- Return to the **cp node**. Save the **try1 deployment** as YAML
+
+Run : `cd $HOME/app1/`
+
+Run : `kubectl get deployment try1 -o yaml > simpleapp.yaml`
+
+- Delete and recreate the **try1 deployment **using the **YAML** file.  Verify the deployment is running with the expected **six replicas**
+
+Run : `kubectl delete deployment try1`
+
+Run : `kubectl create -f simpleapp.yaml`
+
+Run : `kubectl get deployment`
+
+![recreate app as yaml](./Images/recreat%20app%20as%20yaml.PNG)
+
+## **End**
