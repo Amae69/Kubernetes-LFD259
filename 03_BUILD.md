@@ -155,3 +155,14 @@ Run : `curl 10.97.40.62:5000/v2/_catalog`
 - Configure **podman** to work with **non-TLS** repos.  The way to do this depends on the container engine in use.  In my setup we will edit the **/etc/containerd/config.toml** file and add the registry we just created. We have included a script in the **tar ball local-repo-setup.sh** to setup local repository.
 
 Run : `find $HOME -name local-repo-setup.sh`
+
+Run: `cp /home/kris/LFD259/SOLUTIONS/s_03/local-repo-setup.sh $HOME`
+
+Run : `chmod +x $HOME/local-repo-setup.sh`
+
+![config podman with non tls](./Images/config%20podman%20with%20non%20tls.PNG)
+
+Run : `. $HOME/local-repo-setup.sh`
+
+![config repo](./Images/config%20repo.PNG)
+
