@@ -271,3 +271,76 @@ Run : `kubectl get deployment`
 ![recreate app as yaml](./Images/recreat%20app%20as%20yaml.PNG)
 
 ## **Exercise 3.3: Configure Probes**
+```
+When large **datasets** need to be loaded or a complex application launched prior to client access, a **readiness Probe** can be used.  The pod will not become available to the cluster until a test is met and returns a successful exit code.
+
+Both **readiness Probes** and **liveness Probes** use identical syntax with minor differences. There are three types of **liveness probes**: a command returns a zero exit value, meaning success, an **HTTP** request returns a response code in the **200 to 399** range, and the third probe uses a **TCP socket**.  In this example we’ll use a command, **cat**, which will return a zero exit code when the file **/tmp/healthy** has been created and can be accessed.
+```
+### Add **Readiness Probe**
+---
+- Edit the **YAML** deployment file and add the stanza for a **readiness probe.** **NOTE:** If you get an error about validating data, check the indentation you can use this link to formate indntation https://www.json2yaml.com/  An **edited file** is also included in the **tarball**, but requires the **image name** to be edited to match your **registry IP address**.
+
+Run: `vim simpleapp.yaml` to edit the already existing **simpleapp.yaml** file created earlier. Then add the code below in the **container spec** session to configure **readiness probe** 
+```
+readinessProbe:
+  periodSeconds: 5
+  exec:
+    command:
+    - cat
+    - /tmp/healthy
+```
+![config readinessprobe](./Images/config%20readinessprobe.PNG)
+ 
+- Delete and recreate the **try1 deployment**
+
+Run: `kubectl delete deployment try1`
+
+Run : `kubectl create -f simpleapp.yaml`
+
+- The new **try1 deployment** should reference **six** pods, but show **zero available**. They are all missing the **/tmp/healthy** file.
+
+Run : `kubectl get deployment`
+
+![recreate deployment after adding R-probe](./Images/recreate%20deployment%20after%20adding%20R-probe.PNG)
+
+- Take a closer look at the **pods**.  Use **describe pod** and **logs** to **investigate issues**, note there may be no logs.  Choose one of the **try1 pods** as a test to create the **health check file**
+
+Run : `kubectl get pods`
+
+![pods not ready after config of R-probe](./Images/pods%20not%20ready%20after%20config%20of%20R-probe.PNG)
+
+-  Run the bash shell interactively for one of the try1 pod with ready state **0/1** and **Create(touch)** the **/tmp/healthy** file inside
+
+Run : `kubectl exec -it try1-755cc5bdfb-nwckk -- /bin/bash`
+
+inside the pod create the file. Run: `touch /tmp/healthy` then **exit** out of the pod
+
+![exec into one pod to create tmpHealthyFile](./Images/exec%20into%20one%20pod%20to%20create%20tmpHealthyFile.PNG)
+
+- Wait at least **five seconds**,(we set **periodSeconds** for **probe** to run every 5 seconds) then check the **pods** again. 
+
+   Once the probe runs again the container should show available quickly.  The pod with the existing **/tmp/healthy** file should be running and show **1/1** in a **READYstate**.  The rest will continue to show **0/1**.
+
+Run : `kubectl get pods`
+
+![edited pods now shows ready](./Images/edited%20pods%20now%20shows%20ready.PNG)
+
+- Now **create (Touch)** the file in the remaining **pods**.  Consider using a **forloop**, as an easy method to update each **pod**.  Note the > shown in the output represents the **secondary prompt**, you would not type in that character
+
+Run : `for name in $(kubectl get pods -l app=try1 -o name); do kubectl exec $name -- touch /tmp/healthy; done`
+
+- It may take a short while for the probes to check for the file and the health checks to succeed. **Note:** You can exec on one of the pod to confirm that our **forloop** created the file inside
+
+Run : `kubectl get pods`
+
+![All try1 pod in ready state](./Images/All%20try1%20pod%20in%20ready%20state.PNG)
+
+### Add **Liveness Probe**
+---
+Now that we know when a pod is **healthy**, we may want to keep track that it stays **healthy**, using a **liveness Probe**. You could use **one probe** to determine when a **pod** becomes **available** and a **second probe**, to a different **location**, to ensure **ongoing health**
+
+- Edit the **simpleapp.yaml deployment** file again. Add in a **livenessProbe** section as seen below. This time we will add a **Sidecar** container to the pod running a **simple application** which will respond to port **8080**.
+
+Run `Vim simplapp.yam`
+
+jj
