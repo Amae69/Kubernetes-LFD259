@@ -270,4 +270,4 @@ Run : `kubectl get deployment`
 
 ![recreate app as yaml](./Images/recreat%20app%20as%20yaml.PNG)
 
-## **End**
+## **Exercise 3.3: Configure Probes**
