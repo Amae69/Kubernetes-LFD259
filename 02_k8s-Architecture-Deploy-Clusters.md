@@ -1,4 +1,4 @@
-# Exercise 2.1: Overview and Preliminaries
+# **Exercise 2.1: Overview and Preliminaries**
 
 Create a two-nodeUbuntu 24.04 cluster. Using two nodes allows an understanding of some issues and configurations found in a production environment.  Currently 2 vCPU and 8G of memory allows for quick labs.  As we will be working with images it is suggested that you allocate at least 20GB of disk space for the control plane (cp) node, more is better. Other Linuxdistributions should work in a very similar manner, but have not been tested.
 
@@ -13,7 +13,7 @@ Create a two-nodeUbuntu 24.04 cluster. Using two nodes allows an understanding o
 
 I set up two ubuntu VM. which will be my **Control-Plane** and **Worker-Node**. Then I log into my nodes using **PUTTY**
 
-## Deploy a Control Plane Node using Kubeadm
+## **Deploy a Control Plane Node using Kubeadm**
 
 ### Download shellscripts and YAML files
 
